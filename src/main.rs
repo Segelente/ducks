@@ -24,7 +24,8 @@ struct MyApp{
     retained_image: Option<RetainedImage>,
     duck_images: Vec<RetainedImage>,
     scaler: f32,
-    duck_scaler: f32,
+    duck_scaler: Vec<f32>,
+    selected_button: usize,
 
 }
 
@@ -34,7 +35,8 @@ impl Default for MyApp {
             retained_image: None,
             duck_images: load_duck_images().iter_mut().map(|i| RetainedImage::from_color_image("Userpicture", i.clone())).collect(),
             scaler: 0.33,
-            duck_scaler: 50.0,
+            duck_scaler: vec![50.0;3],
+            selected_button: 0,
         }
     }
 }
@@ -74,15 +76,17 @@ impl eframe::App for MyApp{
 
                 });
                 egui::ScrollArea::vertical().show(ui, |ui| {
-                    for image in &self.duck_images {
-                        ui.add(egui::ImageButton::new(image.texture_id(ctx), vec2(self.duck_scaler/2.0, self.duck_scaler/2.0)));
-                        //image.show_scaled(ui, self.duck_scaler);
+                    for (index, image) in self.duck_images.iter_mut().enumerate() {
+                        let image_button = ui.add(egui::ImageButton::new(image.texture_id(ctx), vec2(self.duck_scaler[index] / 2.0, self.duck_scaler[index] / 2.0)));
+                        if image_button.clicked() {
+                            self.selected_button = index;
+                        }
                     }
                 });
             });
         egui::TopBottomPanel::bottom("bottom").show(ctx, |ui|{
             ui.add(egui::Slider::new(&mut self.scaler, 0.0..=2.0).text("Use Slider to enlarge your image!"));
-            ui.add(egui::Slider::new(&mut self.duck_scaler, 50.0..=200.0).text("Use Slider to enlarge your duck!"));
+            ui.add(egui::Slider::new(&mut self.duck_scaler[self.selected_button], 50.0..=200.0).text("Use Slider to enlarge your duck!"));
 
         });
     }
