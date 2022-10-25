@@ -30,5 +30,5 @@ pub fn load_duck_images() -> Vec<ColorImage> {
     for path in paths {
         image_list.push(get_images(path.expect("No Image selected").path()));
     }
-    image_list
+        image_list
 }
