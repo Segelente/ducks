@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use eframe::egui;
 use eframe::epaint::ColorImage;
 use egui::vec2;
@@ -5,9 +6,11 @@ use egui::WidgetType::ImageButton;
 use egui_extras::RetainedImage;
 use image::DynamicImage;
 use native_dialog::FileDialog;
+use crate::camera::take_user_picture;
 use crate::ducks::*;
 
 mod ducks;
+mod camera;
 
 fn main() {
     // In die options könnten wir so Dinge wie die Größe des Fensters und Fullscreen reinpacken
@@ -40,7 +43,7 @@ impl Default for MyApp {
             scaler: 0.33,
             duck_scaler: vec![50.0;5],
             selected_button: 0,
-            image_name: "Imagename".to_string(),
+            image_name: "Imagename.png".to_string(),
             save_image: DynamicImage::default(),
         }
     }
@@ -54,7 +57,6 @@ impl eframe::App for MyApp{
 
         egui::CentralPanel::default().show(ctx, |ui| {
             // TODO: Drag and Drop for duck images
-            // TODO: Save finished Image as .png
             //TODO: take selfies to use as input
             // Wir können `ui` mit Funktionen bearbeiten um ein Bild oder Text anzuzeigen.
             match &self.retained_image {
@@ -102,6 +104,12 @@ impl eframe::App for MyApp{
                 ui.add(egui::TextEdit::singleline(&mut self.image_name));
                 if ui.button("Speichern").clicked() {
                     save_user_images(self.save_image.clone(), self.image_name.clone());
+                }
+                if ui.button("Take Picture").clicked() {
+                    take_user_picture();
+                    let helper = get_images(PathBuf::from("last_picture/unnamed.jpg"));
+                    self.save_image = helper.0;
+                    self.retained_image = Some(RetainedImage::from_color_image("Userpicture", helper.1));
                 }
             ui.add(egui::Slider::new(&mut self.scaler, 0.0..=2.0).text("Use Slider to enlarge your image!"));
 
