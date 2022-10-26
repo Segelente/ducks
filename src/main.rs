@@ -1,9 +1,10 @@
 use eframe::egui;
+use eframe::epaint::ColorImage;
 use egui::vec2;
 use egui::WidgetType::ImageButton;
 use egui_extras::RetainedImage;
+use image::DynamicImage;
 use native_dialog::FileDialog;
-
 use crate::ducks::*;
 
 mod ducks;
@@ -26,6 +27,8 @@ struct MyApp{
     scaler: f32,
     duck_scaler: Vec<f32>,
     selected_button: usize,
+    image_name: String,
+    save_image: DynamicImage,
 
 }
 
@@ -35,8 +38,10 @@ impl Default for MyApp {
             retained_image: None,
             duck_images: load_duck_images().iter_mut().map(|i| RetainedImage::from_color_image("Userpicture", i.clone())).collect(),
             scaler: 0.33,
-            duck_scaler: vec![50.0;3],
+            duck_scaler: vec![50.0;5],
             selected_button: 0,
+            image_name: "Imagename".to_string(),
+            save_image: DynamicImage::default(),
         }
     }
 }
@@ -48,6 +53,9 @@ impl eframe::App for MyApp{
         // Jedes UI Element muss in einem Panel sein, damit egui weiß wohin damit
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            // TODO: Drag and Drop for duck images
+            // TODO: Save finished Image as .png
+            //TODO: take selfies to use as input
             // Wir können `ui` mit Funktionen bearbeiten um ein Bild oder Text anzuzeigen.
             match &self.retained_image {
                 Some(image) => {
@@ -63,13 +71,15 @@ impl eframe::App for MyApp{
             if ui.button("Show me your duck").clicked() {
                 // In egui_extras steht was von image support also man kann die auch von der Library
                 // laden
-                self.retained_image = Some(RetainedImage::from_color_image("Userpicture", get_images(get_path_for_user_image())));
+                let helper = get_images(get_path_for_user_image());
+                self.save_image = helper.0;
+                self.retained_image = Some(RetainedImage::from_color_image("Userpicture", helper.1));
             }
             });
         egui::SidePanel::right("right_panel")
             .resizable(true)
             .default_width(150.0)
-            .width_range(50.0..=200.0)
+            .width_range(10.0..=200.0)
             .show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.heading("Duck images");
@@ -82,11 +92,18 @@ impl eframe::App for MyApp{
                             self.selected_button = index;
                         }
                     }
+                    ui.label(format!("Duck {} selected", self.selected_button+1));
+                    ui.add(egui::Slider::new(&mut self.duck_scaler[self.selected_button], 50.0..=200.0).text("Use Slider to enlarge your duck!"));
+
                 });
             });
-        egui::TopBottomPanel::bottom("bottom").show(ctx, |ui|{
+        egui::TopBottomPanel::bottom("bottom")
+            .show(ctx, |ui|{
+                ui.add(egui::TextEdit::singleline(&mut self.image_name));
+                if ui.button("Speichern").clicked() {
+                    save_user_images(self.save_image.clone(), self.image_name.clone());
+                }
             ui.add(egui::Slider::new(&mut self.scaler, 0.0..=2.0).text("Use Slider to enlarge your image!"));
-            ui.add(egui::Slider::new(&mut self.duck_scaler[self.selected_button], 50.0..=200.0).text("Use Slider to enlarge your duck!"));
 
         });
     }
