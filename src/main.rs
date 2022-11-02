@@ -1,4 +1,5 @@
 use std::fmt::format;
+use std::ops::{Add, Index};
 use std::path::PathBuf;
 use eframe::egui;
 use eframe::epaint::{ColorImage, Pos2};
@@ -31,8 +32,8 @@ struct MyApp{
     duck_scaler: Vec<f32>,
     selected_button: usize,
     save_image: DynamicImage,
-    pointer_pos: Option<Pos2>
-
+    pointer_pos: Vec<(Pos2, usize)>,
+    image_pos_index: usize,
 }
 
 impl Default for MyApp {
@@ -44,7 +45,8 @@ impl Default for MyApp {
             duck_scaler: vec![50.0;5],
             selected_button: 0,
             save_image: DynamicImage::default(),
-            pointer_pos: None,
+            pointer_pos: vec![],
+            image_pos_index: 0,
         }
     }
 }
@@ -55,16 +57,28 @@ impl eframe::App for MyApp{
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             let mut vec2 = Vec2::new(self.duck_scaler[self.selected_button], self.duck_scaler[self.selected_button]);
-            if ctx.input().pointer.any_click() {
-               self.pointer_pos = ctx.pointer_latest_pos();
+            if self.retained_image.is_some() {
+                let resolution_image = self.retained_image.as_mut().expect("No image loaded").size_vec2();
+                ui.add(egui::TextEdit::singleline(&mut format!("{:?}", resolution_image)));
+                if ctx.input().pointer.any_click(){
+                    if vec2.x <= resolution_image.x && vec2.y <= resolution_image.y{
+                        self.pointer_pos.push((ctx.pointer_latest_pos().expect("Position not set"), self.selected_button));
+                    }
             }
-            if self.pointer_pos != None {
-                ui.put(
-                    Rect::from_center_size(self.pointer_pos.expect("Position not found"),vec2),
-                    egui::Image::new(self.duck_images[self.selected_button].texture_id(ctx).clone(), vec2)
-                );
+
             }
-            // TODO: Drag and Drop for duck images
+            if !self.pointer_pos.is_empty(){
+                    for (index, (position, duck_selected)) in self.pointer_pos.iter().enumerate(){
+                        ui.put(
+                            Rect::from_center_size(position.clone(), vec2),
+                            egui::Image::new(self.duck_images[duck_selected.clone()].texture_id(ctx).clone(), vec2)
+                        );
+                    }
+
+                    self.image_pos_index += 1;
+                }
+            // TODO: Fix Duck scaling
+            //TODO: Save ducks on top of images
             match &self.retained_image {
                 Some(image) => {
                     image.show_scaled(ui, self.scaler);
@@ -93,7 +107,6 @@ impl eframe::App for MyApp{
                     }
                     ui.label(format!("Duck {} selected", self.selected_button+1));
                     ui.add(egui::Slider::new(&mut self.duck_scaler[self.selected_button], 50.0..=200.0).text("Use Slider to enlarge your duck!"));
-
                 });
             });
         egui::TopBottomPanel::bottom("bottom")
