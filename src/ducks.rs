@@ -9,8 +9,7 @@ use native_dialog::FileDialog;
 pub fn get_path_for_user_image() -> PathBuf {
     FileDialog::new()
         .set_location("~/Desktop")
-        .add_filter("PNG Image", &["png"])
-        .add_filter("JPEG Image", &["jpg", "jpeg"])
+        .add_filter("Images", &["png","jpg", "jpeg"])
         .show_open_single_file()
         .unwrap().expect("No Image selected")
 
@@ -35,6 +34,14 @@ pub fn load_duck_images() -> Vec<ColorImage> {
         image_list
 }
 
-pub fn save_user_images(img: DynamicImage, input_value: String)  {
-    img.save(input_value).expect("Image could not be saved");
+pub fn save_user_images(img: DynamicImage)  {
+    let path = FileDialog::new()
+        .set_location("~/Downloads")
+        .set_filename("unnamed.png")
+        .show_save_single_file().unwrap().expect("No Image selected");
+    img.save(path).expect("Image could not be saved");
 }
+
+// pub fn place_image() {
+//     ui.
+// }

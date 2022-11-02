@@ -12,3 +12,8 @@ image = "0.24.4"
 egui_extras = { version = "0.19.0", features = ["image"] }
 native-dialog = "0.6.3"
 nokhwa = {version = "0.9.4", features= ["input-v4l"]}
+
+
+# For faster executeables we compile our dependencies in dev mode
+[profile.dev.package.'*']
+opt-level = 3

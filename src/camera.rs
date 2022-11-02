@@ -5,7 +5,7 @@ use nokhwa::{FrameFormat, Camera, CameraFormat, KnownCameraControls};
 use nokhwa::KnownCameraControls::Brightness;
 
 pub fn take_user_picture() {
-    let path = "last_picture/unnamed.jpg";
+    let path = "used_images/unnamed.jpg";
 // set up the Camera
     let mut camera = Camera::new(
         0,
@@ -18,5 +18,5 @@ pub fn take_user_picture() {
 // save image
     image::save_buffer(path, &frame, frame.width(), frame.height(),
                        image::ColorType::Rgb8).expect("save_buffer");
-    camera.stop_stream().expect("TODO: panic message");
+    camera.stop_stream().expect("Could not stop stream");
 }
